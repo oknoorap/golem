@@ -1,7 +1,8 @@
+local Utils = require('golem.utils')
 local Ticker = {}
 
 function Ticker:new(id)
-  assert(id ~= nil, 'Ticker `id` should be not nil.')
+  Utils:assertExists(id, 'Ticker `id`', 'new param')
 
   local ticker = {}
   local tickers = {}

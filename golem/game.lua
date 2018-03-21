@@ -1,11 +1,8 @@
+local Utils = require('golem.utils')
 local SceneMgr = require('golem.sceneMgr')
 local TickerMgr = require('golem.tickerMgr')
 
 local Game = {
-  props = {
-    WIDTH = love.graphics.getWidth(),
-    HEIGHT = love.graphics.getHeight(),
-  },
   config = nil,
   scene = nil,
   ticker = nil,
@@ -14,8 +11,8 @@ local Game = {
 -- Create new instance
 function Game:new(config)
   -- Set config
-  assert(type(config) == 'table', 'Game should has config.')
-  assert(config.id, 'Game ID should be exists in config.')
+  Utils:assertType(config, 'Config', 'table')
+  Utils:assertExists(config.id, 'ID', 'Game Config')
   Game.config = config
 
   -- Init Ticker Manager
@@ -25,19 +22,26 @@ function Game:new(config)
   Game.scene = SceneMgr:new()
 
   -- Local instance
-  local game = {}
+  local game = {
+    props = {
+      ui = {
+        WIDTH = love.graphics.getWidth(),
+        HEIGHT = love.graphics.getHeight(),
+      },
+    },
+  }
 
   -- Start game engine.
   -- @param sceneName Scene Name in scene folder.
   function game:start(sceneName)
+    -- Add game to scene list and set it as current scene
     Game.scene:add(sceneName)
+    Game.scene:setCurrent(sceneName)
     
     -- Call start scene immediately
-    local startScene = Game.scene:get(sceneName)
-    startScene:prepare()
+    local initialScene = Game.scene:get(sceneName)
+    initialScene:canvas()
   end
-
-  -- Game state management
 
   return game
 end
@@ -57,6 +61,11 @@ end
 
 -- Game renderer
 function Game:render()
+  local currentScene = self.scene:currentScene()
+  local scene = self.scene:get(currentScene)
+  
+  -- Draw scene
+  scene:draw()
 end
 
 -- Game initialization

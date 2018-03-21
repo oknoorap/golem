@@ -1,10 +1,25 @@
 local Object = require('golem.object')
 local Scene = require('golem.scene')
-local MenuScene = Scene.new()
 
--- Objects declaration
--- Background
--- local background = Object:image('background', 'assets/bg.png')
+-- New scene with black background
+local MenuScene = Scene:new({
+  background = {
+    color = {
+      r = 0,
+      g = 0,
+      b = 0,
+      a = 255
+    }
+  }
+})
+
+-- Image
+-- @type Object:image
+local image = Object:image('assets/mafia.jpg', 200, 150)
+
+-- Rectangle
+-- @type Object:rectangle
+local rect = Object:rectangle(250, 250)
 
 -- -- BG Sound
 -- local bgsound = Object:sound('bgsound', 'assets/bg.mp3')
@@ -21,13 +36,17 @@ local MenuScene = Scene.new()
 --   hp: 50
 -- })
 
-function MenuScene:prepare()
-  print('prepare')
-  -- Add objects to screen
-  -- self:add(background)
+function MenuScene:canvas()
+  -- Add objects to canvas
+  self:add('background', image)
+  self:add('rect', rect)
   -- self:add(bgsound)
   -- self:add(player)
   -- self:add(enemy)
+end
+
+function MenuScene:enter()
+  print('enter scene')
 end
 
 function MenuScene:action()
