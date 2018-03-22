@@ -1,6 +1,6 @@
 local Utils = require('golem.utils')
+local Ticker = require('golem.ticker')
 local SceneMgr = require('golem.sceneMgr')
-local TickerMgr = require('golem.tickerMgr')
 
 local Game = {
   config = nil,
@@ -16,7 +16,7 @@ function Game:new(config)
   Game.config = config
 
   -- Init Ticker Manager
-  Game.ticker = TickerMgr:new(self.config.id)
+  Game.ticker = Ticker:new()
 
   -- Init Scenes Manager
   Game.scene = SceneMgr:new()
@@ -56,16 +56,41 @@ end
 
 -- Game ticker updater
 function Game:tick(dt)
-  self.ticker:tick(dt)
+  local scene = self.scene:get(self.scene:currentScene())
+  -- Detect input keys
+
+  -- Update ticker
+  if dt then
+    self.ticker:tick(dt)
+    scene:action()
+  end
 end
 
 -- Game renderer
 function Game:render()
-  local currentScene = self.scene:currentScene()
-  local scene = self.scene:get(currentScene)
-  
+  local scene = self.scene:get(self.scene:currentScene())
+
   -- Draw scene
   scene:draw()
+end
+
+-- Key pressed input
+function Game:keypressed(key)
+  local scene = self.scene:get(self.scene:currentScene())
+  scene:addInput(key)
+end
+
+-- Key released input
+function Game:keyreleased(key)
+  local scene = self.scene:get(self.scene:currentScene())
+  scene:removeInput(key)
+end
+
+-- Game events
+function Game:exit()
+  local scene = self.scene:get(self.scene:currentScene())
+  scene:leave()
+  return false
 end
 
 -- Game initialization
@@ -81,6 +106,20 @@ end
 -- Render game
 function love.draw()
   Game:render()
+end
+
+-- Detect input
+function love.keypressed(key)
+  Game:keypressed(key)
+end
+
+function love.keyreleased(key)
+  Game:keyreleased(key)
+end
+
+-- Events
+function love.quit()
+  return Game:exit()
 end
 
 return Game

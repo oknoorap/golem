@@ -1,25 +1,24 @@
 local Utils = require('golem.utils')
 local Entity = require('golem.entity')
-local Object = {
-  RectTypes = {
-    FILL = 'fill',
-    LINE = 'line'
-  }
-}
+local Object = {}
 
 -- Image object
 -- @param string source
 -- @param table  props
 function Object:image(source, width, height, props)
   Utils:assertType(source, 'Image source', 'string')
-
+  
+  -- Initial props.
+  local initialProps = {}
+  
   if props then
     Utils:assertType(props, 'Image Properties', 'table')
+    Utils:extend(initialProps, props)
   end
-
+  
   -- New entity instance for image.
-  local entity = Entity:new(props)
   local image = love.graphics.newImage(source)
+  local entity = Entity:new(props)
 
   if width then
     Utils:assertType(width, 'Image width', 'number')
@@ -33,6 +32,11 @@ function Object:image(source, width, height, props)
     entity:setSize({
       height = height,
     })
+  end
+
+  -- Global function to clear screen before draw an object.
+  local function clearScreen()
+    love.graphics.setColor(255, 255, 255, 255)
   end
 
   -- Draw image.
@@ -53,6 +57,7 @@ function Object:image(source, width, height, props)
     local scaleY = newHeight / oldHeight
 
     -- Draw image based on rotate, and scale
+    clearScreen()
     love.graphics.draw(
       image,
       entity.position.x,
@@ -74,15 +79,33 @@ end
 -- Rectangle object
 -- @param number width
 -- @param number height
--- @param string type
 -- @param table  props
-function Object:rectangle(width, height, type, props)
+function Object:rectangle(width, height, props)
   Utils:assertType(width, 'Rectangle width', 'number')
   Utils:assertType(height, 'Rectangle height', 'number')
 
   -- Initial props.
   local initialProps = {
-    color = {255, 255, 255}
+    color = {
+      r = 255, 
+      g = 255,
+      b = 255,
+      a = 255,
+    },
+    radius = {
+      x = 0,
+      y = 0
+    },
+    stroke = {
+      color = {
+        r = 255,
+        g = 0,
+        b = 0,
+        a = 255
+      },
+      width = 1,
+      style = 'inset'
+    }
   }
 
   if props then
@@ -90,17 +113,31 @@ function Object:rectangle(width, height, type, props)
     Utils:extend(initialProps, props)
   end
 
-  if type == nil then
-    type = self.RectTypes.FILL
-  end
-
   -- New entity instance for rectangle.
   local entity = Entity:new(initialProps)
 
+  -- Set rectangle size.
+  entity:setSize({
+    width = width,
+    height = height
+  })
+
   -- Draw rectangle.
   function entity:draw()
-    love.graphics.setColor(entity.props.color)
-    love.graphics.rectangle(type, entity.position.x, entity.position.y, width, height)
+    -- Draw rectangle body
+    love.graphics.setColor(entity.props.color.r, entity.props.color.g, entity.props.color.b, entity.props.color.a)
+    love.graphics.rectangle('fill', entity.position.x, entity.position.y, width, height, entity.props.radius.x, entity.props.radius.y)
+
+    -- Draw rectangle border
+    love.graphics.setColor(entity.props.stroke.color.r, entity.props.stroke.color.g, entity.props.stroke.color.b, entity.props.stroke.color.a)
+    love.graphics.setLineWidth(entity.props.stroke.width)
+    love.graphics.line(
+      entity.position.x, entity.position.y,
+      entity.position.x + width, entity.position.y,
+      entity.position.x + width, entity.position.y + height,
+      entity.position.x, entity.position.y + height,
+      entity.position.x, entity.position.y
+    )
   end
 
   return entity

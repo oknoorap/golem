@@ -31,7 +31,7 @@ function Entity:new(props)
   -- @param table coords
   function entity:setPosition(coords)
     for k, v in pairs(coords) do
-      entity.position[k] = v
+      self.position[k] = v
     end
   end
 
@@ -39,7 +39,7 @@ function Entity:new(props)
   -- @param table dimensions
   function entity:setSize(dimensions)
     for k, v in pairs(dimensions) do
-      entity.size[k] = v
+      self.size[k] = v
     end
   end
 
@@ -47,8 +47,44 @@ function Entity:new(props)
   -- @param table transforms
   function entity:setTransform(transforms)
     for k, v in pairs(transforms) do
-      entity.transform[k] = v
+      self.transform[k] = v
     end
+  end
+
+  -- Set new props
+  -- @param table transforms
+  function entity:setProps(props)
+    for k, v in pairs(props) do
+      Utils:extend(self.props, props)
+    end
+  end
+
+  -- Move up
+  function entity:moveUp()
+    entity:setPosition({
+      y = entity.position.y - 1
+    })
+  end
+
+  -- Move down
+  function entity:moveDown()
+    entity:setPosition({
+      y = entity.position.y + 1
+    })
+  end
+
+  -- Move left
+  function entity:moveLeft()
+    entity:setPosition({
+      x = entity.position.x - 1
+    })
+  end
+
+  -- Move right
+  function entity:moveRight()
+    entity:setPosition({
+      x = entity.position.x + 1
+    })
   end
 
   return entity

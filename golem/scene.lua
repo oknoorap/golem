@@ -1,6 +1,14 @@
 local Utils = require('golem.utils')
 local Canvas = require('golem.canvas')
-local Scene = {}
+local Scene = {
+  PositionTypes = {
+    LEFT = 'left',
+    RIGHT = 'right',
+    CENTER = 'center',
+    TOP = 'top',
+    BOTTOM = 'bottom',
+  }
+}
 
 function Scene:new(props)
   -- Initial properties.
@@ -17,6 +25,12 @@ function Scene:new(props)
         },
         image = nil
       }
+    },
+    inputs = {},
+    is = {
+      enter = false,
+      leave = false,
+      idle = true,
     }
   }
   -- Assign new props.
@@ -44,8 +58,54 @@ function Scene:new(props)
   -- Add object to scene objects.
   -- @param string name
   -- @param Entity object
-  function scene:add(name, object)
-    objects[name] = object
+  -- @param mixed  x
+  -- @param mixed  y
+  function scene:add(name, object, x, y, index)
+    if object then
+      if x == Scene.PositionTypes.LEFT then
+        x = 0
+      elseif x == Scene.PositionTypes.RIGHT then
+        x = self.props.width - object.size.width
+      elseif x == Scene.PositionTypes.CENTER then
+        x = (self.props.width / 2) - (object.size.width / 2)
+      end
+
+      if y == Scene.PositionTypes.TOP then
+        y = 0
+      elseif y == Scene.PositionTypes.BOTTOM then
+        y = self.props.height - object.size.height
+      elseif y == Scene.PositionTypes.CENTER then
+        y = (self.props.height / 2) - (object.size.height / 2)
+      end
+
+      object:setPosition({
+        x = x or object.position.x,
+        y = y or object.position.y,
+      })
+
+      -- Set object layer z-index.
+      if index == nil then
+        local length = 0
+        for k, v in pairs(objects) do
+          length = length + 1
+        end
+
+        object:setProps({
+          index = length + 1
+        })
+      else
+        object:setProps({
+          index = index
+        })
+      end
+
+      -- Set object name.
+      object:setProps({
+        name = name
+      })
+
+      objects[name] = object
+    end
   end
 
   -- Remove object from scene objects.
@@ -59,12 +119,20 @@ function Scene:new(props)
   -- Get object name.
   -- @param string name
   function scene:object(name)
-    return objects[name]
+    if objects[name] then
+      return objects[name]
+    end
   end
 
   -- Get layer list.
   function scene:objects()
-    return objects
+    local list = {}
+
+    for _, obj in pairs(objects) do
+      table.insert(list, obj)
+    end
+
+    return list
   end
 
   -- Draw canvas
@@ -72,14 +140,67 @@ function Scene:new(props)
     -- Draw canvas.
     canvas:draw()
 
-    -- Draw all objects.
+    -- Draw all objects based on layer idnex.
     local objects = scene:objects()
-    for _, obj in pairs(objects) do
-      obj:draw()
+    table.sort(objects, function (a, b) return a.props.index < b.props.index end)
+
+    for i = 1, #objects do
+      objects[i]:draw()
+    end
+
+    -- local objectdrawlist = table.sort(objects, function(a,b) return a.z < b.z end)
+    -- for i = 1, #objectdrawlist do
+    --   objectdrawlist[i]:draw()
+    -- end
+
+    -- Enter scene.
+    if scene.is.enter == false then
+      scene:enter()
+      scene.is.enter = true
     end
 
     -- Reset canvas to original canvas.
     canvas:reset()
+  end
+
+  -- Input event adder
+  function scene:addInput(key)
+    Utils:assertType(key, 'Input key', 'string')
+
+    for index, _key in ipairs(self.inputs) do
+      if _key == key then
+        return true
+      end
+    end
+
+    self.is.idle = false
+    table.insert(self.inputs, key)
+  end
+
+  -- Input event remove
+  function scene:removeInput(key)
+    Utils:assertType(key, 'Input key', 'string')
+    for index, _key in pairs(self.inputs) do
+      if _key == key then
+        table.remove(self.inputs, index)
+      end
+    end
+
+    self.is.idle = true
+  end
+
+  -- Input event listener
+  -- @param string   key
+  -- @param function fn
+  function scene:input(key, fn)
+    Utils:assertType(key, 'Input key', 'string')
+    Utils:assertType(fn, 'Input Callback', 'function')
+
+    for i = 0, #self.inputs do
+      if self.inputs[i] == key then
+        fn(key)
+      end
+    end
   end
 
   return scene

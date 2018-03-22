@@ -32,7 +32,7 @@ function Canvas:new(width, height, color)
   -- Init canvas
   love.graphics.setCanvas(self.graphic)
   love.graphics.setBlendMode('alpha')
-  
+
   function canvas:draw()
     love.graphics.clear()
     love.graphics.setColor(color.r, color.g, color.b, color.a)

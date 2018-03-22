@@ -1,4 +1,4 @@
--- Overrides package path
+-- Overrides package path, just for demo
 package.path = package.path .. ';../../?.lua'
 
 -- Simple game declaration with config.
