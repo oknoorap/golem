@@ -1,6 +1,17 @@
 local Utils = require('golem.utils')
 local Entity = require('golem.entity')
+local Canvas = require('golem.canvas')
 local Object = {}
+
+-- Global function to clear screen before draw an object.
+local function clearScreen()
+  love.graphics.setColor(255, 255, 255, 255)
+  love.graphics.push()
+end
+
+local function resetScreen()
+  love.graphics.pop()
+end
 
 -- Image object
 -- @param string source
@@ -34,11 +45,6 @@ function Object:image(source, width, height, props)
     })
   end
 
-  -- Global function to clear screen before draw an object.
-  local function clearScreen()
-    love.graphics.setColor(255, 255, 255, 255)
-  end
-
   -- Draw image.
   function entity:draw()
     local oldWidth, oldHeight = image:getDimensions()
@@ -66,6 +72,7 @@ function Object:image(source, width, height, props)
       scaleX,
       scaleY
     )
+    resetScreen()
   end
 
   -- Get image object.
@@ -124,6 +131,8 @@ function Object:rectangle(width, height, props)
 
   -- Draw rectangle.
   function entity:draw()
+    clearScreen()
+
     -- Draw rectangle body
     love.graphics.setColor(entity.props.color.r, entity.props.color.g, entity.props.color.b, entity.props.color.a)
     love.graphics.rectangle('fill', entity.position.x, entity.position.y, width, height, entity.props.radius.x, entity.props.radius.y)
@@ -138,6 +147,8 @@ function Object:rectangle(width, height, props)
       entity.position.x, entity.position.y + height,
       entity.position.x, entity.position.y
     )
+
+    resetScreen()
   end
 
   return entity

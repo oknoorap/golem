@@ -1,5 +1,4 @@
 local Utils = require('golem.utils')
-local Obect = require('golem.object')
 local Canvas = {}
 
 -- New canvas
@@ -35,6 +34,7 @@ function Canvas:new(width, height, color)
 
   function canvas:draw()
     love.graphics.clear()
+    love.graphics.push()
     love.graphics.setColor(color.r, color.g, color.b, color.a)
     love.graphics.rectangle('fill', 0, 0, width, height)
     love.graphics.setScissor(0, 0, width, height)
@@ -43,6 +43,7 @@ function Canvas:new(width, height, color)
 
   -- Reset canvas
   function canvas:reset()
+    love.graphics.pop()
     love.graphics.setScissor()
     love.graphics.setCanvas()
   end

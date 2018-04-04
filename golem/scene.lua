@@ -1,5 +1,6 @@
 local Utils = require('golem.utils')
 local Canvas = require('golem.canvas')
+local Ticker = require('golem.ticker')
 local Scene = {
   PositionTypes = {
     LEFT = 'left',
@@ -26,7 +27,11 @@ function Scene:new(props)
         image = nil
       }
     },
-    inputs = {},
+    inputs = {
+      hold = nil,
+      history = {},
+    },
+    ticker = Ticker.new(),
     is = {
       enter = false,
       leave = false,
@@ -46,6 +51,7 @@ function Scene:new(props)
   local canvas = Canvas:new(scene.props.width, scene.props.height, scene.props.background.color)
 
   -- Abstract methods.
+  function scene:action() end
   function scene:canvas() end
   function scene:enter() end
   function scene:leave() end
@@ -116,6 +122,12 @@ function Scene:new(props)
     end
   end
 
+  -- Update scene ticker
+  -- @param float dt
+  function scene:tick(dt)
+    self.ticker:tick(dt)
+  end
+
   -- Get object name.
   -- @param string name
   function scene:object(name)
@@ -140,18 +152,16 @@ function Scene:new(props)
     -- Draw canvas.
     canvas:draw()
 
-    -- Draw all objects based on layer idnex.
+    -- Draw all objects based on layer index.
     local objects = scene:objects()
+
+    -- Sort layers by index.
     table.sort(objects, function (a, b) return a.props.index < b.props.index end)
 
+    -- Draw objects.
     for i = 1, #objects do
       objects[i]:draw()
     end
-
-    -- local objectdrawlist = table.sort(objects, function(a,b) return a.z < b.z end)
-    -- for i = 1, #objectdrawlist do
-    --   objectdrawlist[i]:draw()
-    -- end
 
     -- Enter scene.
     if scene.is.enter == false then
@@ -164,28 +174,33 @@ function Scene:new(props)
   end
 
   -- Input event adder
-  function scene:addInput(key)
+  -- @param string  key
+  -- @param boolean hold
+  function scene:addInput(key, hold)
     Utils:assertType(key, 'Input key', 'string')
 
-    for index, _key in ipairs(self.inputs) do
-      if _key == key then
-        return true
-      end
-    end
-
     self.is.idle = false
-    table.insert(self.inputs, key)
+
+    if hold then
+      Utils:assertType(hold, 'Hold key', 'boolean')
+      self.inputs.hold = key
+    else
+      local inputLength = #self.inputs.history
+      if inputLength > 10 then
+        for i = inputLength - 9, inputLength do
+          table.insert(self.inputs.history, self.inputs.history[i])
+        end
+      end
+
+      table.insert(self.inputs.history, key)
+    end
   end
 
   -- Input event remove
   function scene:removeInput(key)
     Utils:assertType(key, 'Input key', 'string')
-    for index, _key in pairs(self.inputs) do
-      if _key == key then
-        table.remove(self.inputs, index)
-      end
-    end
 
+    self.inputs.hold = nil
     self.is.idle = true
   end
 
@@ -193,13 +208,11 @@ function Scene:new(props)
   -- @param string   key
   -- @param function fn
   function scene:input(key, fn)
-    Utils:assertType(key, 'Input key', 'string')
+    Utils:assertType(key, 'Input Key', 'string')
     Utils:assertType(fn, 'Input Callback', 'function')
 
-    for i = 0, #self.inputs do
-      if self.inputs[i] == key then
-        fn(key)
-      end
+    if self.inputs.hold == key then
+      fn(key)
     end
   end
 

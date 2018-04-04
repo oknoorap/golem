@@ -4,7 +4,9 @@ local Entity = {}
 function Entity:new(props)
   -- Initial properties.
   local entity = {
-    props = {},
+    props = {
+      speed = 1
+    },
     position = {
       x = 0,
       y = 0,
@@ -62,28 +64,28 @@ function Entity:new(props)
   -- Move up
   function entity:moveUp()
     entity:setPosition({
-      y = entity.position.y - 1
+      y = entity.position.y - entity.props.speed
     })
   end
 
   -- Move down
   function entity:moveDown()
     entity:setPosition({
-      y = entity.position.y + 1
+      y = entity.position.y + entity.props.speed
     })
   end
 
   -- Move left
   function entity:moveLeft()
     entity:setPosition({
-      x = entity.position.x - 1
+      x = entity.position.x - entity.props.speed
     })
   end
 
   -- Move right
   function entity:moveRight()
     entity:setPosition({
-      x = entity.position.x + 1
+      x = entity.position.x + entity.props.speed
     })
   end
 

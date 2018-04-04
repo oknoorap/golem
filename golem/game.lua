@@ -1,6 +1,7 @@
 local Utils = require('golem.utils')
 local Ticker = require('golem.ticker')
 local SceneMgr = require('golem.sceneMgr')
+local Keys = require('golem.keys')
 
 local Game = {
   config = nil,
@@ -56,40 +57,52 @@ end
 
 -- Game ticker updater
 function Game:tick(dt)
-  local scene = self.scene:get(self.scene:currentScene())
-  -- Detect input keys
-
   -- Update ticker
   if dt then
     self.ticker:tick(dt)
+  end
+
+  -- Update scenes
+  for name, scene in pairs(self.scene:list()) do
+    -- Update input
+    for i = 0, #Keys do
+      if Keys[i] and love.keyboard.isDown(Keys[i]) then
+        scene:addInput(Keys[i], true)
+      end
+    end
+
+    scene:tick(dt)
     scene:action()
   end
 end
 
 -- Game renderer
 function Game:render()
-  local scene = self.scene:get(self.scene:currentScene())
-
-  -- Draw scene
-  scene:draw()
+  -- Draw scenes
+  for name, scene in pairs(self.scene:list()) do
+    scene:draw()
+  end
 end
 
 -- Key pressed input
 function Game:keypressed(key)
-  local scene = self.scene:get(self.scene:currentScene())
-  scene:addInput(key)
+  for name, scene in pairs(self.scene:list()) do
+    scene:addInput(key, false)
+  end
 end
 
 -- Key released input
 function Game:keyreleased(key)
-  local scene = self.scene:get(self.scene:currentScene())
-  scene:removeInput(key)
+  for name, scene in pairs(self.scene:list()) do
+    scene:removeInput(key)
+  end
 end
 
 -- Game events
 function Game:exit()
-  local scene = self.scene:get(self.scene:currentScene())
-  scene:leave()
+  for name, scene in pairs(self.scene:list()) do
+    return scene:leave()
+  end
   return false
 end
 
